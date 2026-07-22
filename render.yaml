@@ -30,7 +30,6 @@ services:
           type: web
           name: renovai-ml
           property: host
-          envVarKey: ML_SERVICE_URL
       - key: OPENAI_API_KEY
         sync: false          # Optional — set in Render dashboard if desired
       - key: FRONTEND_URL
@@ -38,7 +37,6 @@ services:
           type: web
           name: renovai-frontend
           property: url
-          envVarKey: FRONTEND_URL
 
   # ── 2. Flask ML Microservice (Python) ──────────────────────────────────────
   - type: web
@@ -81,4 +79,3 @@ services:
           type: web
           name: renovai-server
           property: url
-          envVarKey: VITE_API_BASE_URL
