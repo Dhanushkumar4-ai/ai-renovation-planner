@@ -2,9 +2,11 @@ node_modules/
 .env
 .DS_Store
 dist/
+build/
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 venv/
 .venv/
 ml-service/venv/
@@ -13,3 +15,13 @@ ml-service/venv/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+
+# Docker build artifacts
+*.tar

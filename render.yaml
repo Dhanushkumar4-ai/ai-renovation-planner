@@ -1,0 +1,84 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Renov-AI — Render Blueprint (render.yaml)
+# Deploy all 3 services in one click from the Render dashboard.
+# Docs: https://render.com/docs/blueprint-spec
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── 1. Express Backend (Node.js) ──────────────────────────────────────────
+  - type: web
+    name: renovai-server
+    runtime: node
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: node index.js
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: MONGO_URI
+        sync: false          # You set this in the Render dashboard
+      - key: JWT_SECRET
+        generateValue: true  # Render auto-generates a cryptographically secure value
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: renovai-ml
+          property: host
+          envVarKey: ML_SERVICE_URL
+      - key: OPENAI_API_KEY
+        sync: false          # Optional — set in Render dashboard if desired
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: renovai-frontend
+          property: url
+          envVarKey: FRONTEND_URL
+
+  # ── 2. Flask ML Microservice (Python) ──────────────────────────────────────
+  - type: web
+    name: renovai-ml
+    runtime: python
+    rootDir: ml-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 app:app
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 5001
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # ── 3. React Frontend (Static Site) ────────────────────────────────────────
+  - type: web
+    name: renovai-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    plan: free
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    routes:
+      # SPA fallback — all routes served by index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: renovai-server
+          property: url
+          envVarKey: VITE_API_BASE_URL

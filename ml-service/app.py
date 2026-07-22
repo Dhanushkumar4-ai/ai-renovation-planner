@@ -99,5 +99,8 @@ def design_suggest():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    print('🤖 Renov-AI ML Service starting on http://localhost:5001')
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    import os
+    port = int(os.environ.get('PORT', 5001))
+    print(f'🤖 Renov-AI ML Service starting on port {port}')
+    app.run(host='0.0.0.0', port=port, debug=False)
+

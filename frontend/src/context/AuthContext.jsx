@@ -3,7 +3,9 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
-const API = axios.create({ baseURL: '/api' });
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const API = axios.create({ baseURL: API_BASE });
+
 
 // Attach token to every request
 API.interceptors.request.use(config => {

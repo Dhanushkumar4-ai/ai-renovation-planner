@@ -13,7 +13,31 @@ import designRoutes from './routes/design.js';
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: '*', credentials: true }));
+
+// ── CORS ─────────────────────────────────────────────────────────────────────
+// In production: restrict to the deployed frontend URL (set FRONTEND_URL env var)
+// In development: allow all localhost origins
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [
+      process.env.FRONTEND_URL,
+      // Render preview URLs follow this pattern — keep for staging convenience
+      /https:\/\/renovai-frontend.*\.onrender\.com$/
+    ].filter(Boolean)
+  : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Render health checks)
+    if (!origin) return callback(null, true);
+    const allowed = allowedOrigins.some(o =>
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    if (allowed) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true
+}));
+
 app.use(express.json({ limit: '10mb' }));
 
 // Routes
