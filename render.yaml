@@ -33,10 +33,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false          # Optional — set in Render dashboard if desired
       - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: renovai-frontend
-          property: url
+        sync: false          # Set to your frontend URL after deployment (e.g. https://renovai-frontend.onrender.com)
 
   # ── 2. Flask ML Microservice (Python) ──────────────────────────────────────
   - type: web
@@ -75,7 +72,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: renovai-server
-          property: url
+        sync: false          # Set to your backend URL + /api (e.g. https://renovai-server.onrender.com/api)
