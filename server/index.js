@@ -49,19 +49,32 @@ app.use('/api/recommend', recommendRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/design', designRoutes);
 
-app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+// Health Check
+app.get('/health', (req, res) => res.json({
+  status: 'ok',
+  dbState: mongoose.connection.readyState === 1 ? 'connected' : 'connecting/disconnected',
+  time: new Date().toISOString()
+}));
 
-// MongoDB connect
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`🚀 Renov-AI server running on port ${PORT}`));
+
+// MongoDB connect with auto-retry
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/renovai';
-mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected:', MONGO_URI);
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => console.log(`🚀 Renov-AI server running on http://localhost:${PORT}`));
-  })
-  .catch(err => {
-    console.error('❌ MongoDB connection failed:', err.message);
-    process.exit(1);
-  });
+const connectDB = async () => {
+  try {
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+    });
+    console.log('✅ MongoDB connected successfully to Atlas');
+  } catch (err) {
+    console.error('⚠️ MongoDB connection warning:', err.message);
+    console.log('🔄 Retrying MongoDB connection in 5 seconds...');
+    setTimeout(connectDB, 5000);
+  }
+};
+
+connectDB();
 
 export default app;
+
